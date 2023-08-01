@@ -107,6 +107,46 @@
         ];
       };
 
+      nixosConfigurations."devnix" = nixpkgs.lib.nixosSystem rec {
+        system = "x86_64-linux";
+        modules = [
+          ./hosts/devnix/hardware-configuration.nix
+          ./hosts/devnix/configuration.nix
+          nixpkgs.nixosModules.notDetected
+          self.nixosModules.auto-upgrade
+          self.nixosModules.binary-cache-iohk
+          self.nixosModules.firmware
+          self.nixosModules.flakes
+          self.nixosModules.make-linux-fast-again
+          self.nixosModules.nix-service
+          self.nixosModules.remote-deployable
+          self.nixosModules.save-space
+          self.nixosModules.user-tfc
+          (_: {
+            imports = [ hercules-ci.nixosModules.agent-profile ];
+            services.hercules-ci-agent.enable = true;
+            services.hercules-ci-agent.settings.concurrentTasks = 4;
+          })
+          home-manager.nixosModules.home-manager
+          (_: {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.tfc = { ... }: {
+              home.stateVersion = "23.05";
+              programs.home-manager.enable = true;
+              imports = [
+                ./home-manager-modules/programming-haskell.nix
+                ./home-manager-modules/programming.nix
+                ./home-manager-modules/shell/bash.nix
+                ./home-manager-modules/shelltools.nix
+                ./home-manager-modules/vim.nix
+              ];
+            };
+          })
+
+        ];
+      };
+
       nixosModules =
         let
           inherit (nixpkgs) lib;
